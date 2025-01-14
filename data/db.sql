@@ -8,6 +8,8 @@ CREATE TABLE Users (
     password VARCHAR(255) NOT NULL,
     role ENUM('student', 'teacher', 'admin') NOT NULL,
     profile_image VARCHAR(255),
+    banner_image VARCHAR(255) NULL, 
+    bio TEXT NULL, 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -18,6 +20,7 @@ CREATE TABLE Courses (
     description TEXT,
     teacher_id INT,
     category VARCHAR(100),
+    banner_image VARCHAR(255) NULL, 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (teacher_id) REFERENCES Users(user_id)
 );
@@ -27,7 +30,7 @@ CREATE TABLE Chapters (
     chapter_id INT AUTO_INCREMENT PRIMARY KEY,
     course_id INT,
     title VARCHAR(255) NOT NULL,
-    content TEXT, -- Stores HTML content
+    content TEXT, -- stores HTML content
     order_number INT,
     FOREIGN KEY (course_id) REFERENCES Courses(course_id)
 );
