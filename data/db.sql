@@ -2,19 +2,22 @@ CREATE DATABASE courselab;
 USE courselab;
 
 -- Users Table
-CREATE TABLE Users (
+CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
     role ENUM('student', 'teacher', 'admin') NOT NULL,
-    profile_image VARCHAR(255),
-    banner_image VARCHAR(255) NULL, 
+    profile_image TEXT,
+    banner_image TEXT, 
     bio TEXT NULL, 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
 );
 
 -- Courses Table
-CREATE TABLE Courses (
+CREATE TABLE courses (
     course_id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     description TEXT,
@@ -22,21 +25,13 @@ CREATE TABLE Courses (
     category VARCHAR(100),
     banner_image VARCHAR(255) NULL, 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    content TEXT, -- stores HTML content
+    content_type ENUM('video', 'text') DEFAULT 'text',
     FOREIGN KEY (teacher_id) REFERENCES Users(user_id)
 );
 
--- Chapters Table
-CREATE TABLE Chapters (
-    chapter_id INT AUTO_INCREMENT PRIMARY KEY,
-    course_id INT,
-    title VARCHAR(255) NOT NULL,
-    content TEXT, -- stores HTML content
-    order_number INT,
-    FOREIGN KEY (course_id) REFERENCES Courses(course_id)
-);
-
 -- Enrollments Table
-CREATE TABLE Enrollments (
+CREATE TABLE enrollments (
     enrollment_id INT AUTO_INCREMENT PRIMARY KEY,
     student_id INT,
     course_id INT,
@@ -47,7 +42,7 @@ CREATE TABLE Enrollments (
 );
 
 -- Certificates Table
-CREATE TABLE Certificates (
+CREATE TABLE certificates (
     certificate_id INT AUTO_INCREMENT PRIMARY KEY,
     student_id INT,
     course_id INT,
@@ -58,13 +53,13 @@ CREATE TABLE Certificates (
 );
 
 -- Tags Table
-CREATE TABLE Tags (
+CREATE TABLE tags (
     tag_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE
 );
 
 -- CourseTags Table
-CREATE TABLE CourseTags (
+CREATE TABLE coursetags (
     course_id INT,
     tag_id INT,
     PRIMARY KEY (course_id, tag_id),
@@ -73,7 +68,7 @@ CREATE TABLE CourseTags (
 );
 
 -- Reviews Table
-CREATE TABLE Reviews (
+CREATE TABLE reviews (
     review_id INT AUTO_INCREMENT PRIMARY KEY,
     student_id INT,
     course_id INT,
