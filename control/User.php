@@ -133,7 +133,26 @@ class User
         $this->bio = $bio;
     }
     
-    
+    public function signup()
+    {
+        if ($this->role == 'Student' || $this->role == 'Teacher') {
+
+            $query = "INSERT INTO users (email, password, first_name, last_name, role) VALUES (:email, :password, :first_name, :last_name, :role)";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':email', $this->email);
+            $stmt->bindParam(':password', $this->password);
+            $stmt->bindParam(':first_name', $this->first_name);
+            $stmt->bindParam(':last_name', $this->last_name);
+            $stmt->bindParam(':role', $this->role);
+            $stmt->execute();
+            return $this->db->lastInsertId();
+
+        }elseif ($this->role == 'Admin') {
+            return false;
+        }
+    }
+
+
     //methods
 
     public function login($email, $password)
