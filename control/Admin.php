@@ -16,6 +16,7 @@ class Admin extends User
     {
         switch ($action) {
             case 'add':
+                
                 return true;
             case 'edit':
                 return true;
