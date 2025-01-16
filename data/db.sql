@@ -79,3 +79,42 @@ CREATE TABLE reviews (
     FOREIGN KEY (student_id) REFERENCES Users(user_id),
     FOREIGN KEY (course_id) REFERENCES Courses(course_id)
 );
+
+
+
+-- Course detail view 
+
+CREATE VIEW course_details AS
+SELECT 
+    c.course_id,
+    c.title,
+    c.description,
+    c.category,
+    c.banner_image,
+    c.created_at AS course_created_at,
+    c.content,
+    c.content_type,
+    u.user_id AS teacher_id,
+    u.first_name AS teacher_first_name,
+    u.last_name AS teacher_last_name,
+    u.profile_image AS teacher_profile_image,
+    e.student_id,
+    u_student.first_name AS student_first_name,
+    u_student.last_name AS student_last_name,
+    u_student.profile_image AS student_profile_image,
+    e.enrollment_date,
+    e.completion_status,
+    r.review_id,
+    r.comment,
+    r.rating,
+    r.reviewed_at
+FROM 
+    courses c
+JOIN 
+    users u ON c.teacher_id = u.user_id
+LEFT JOIN 
+    enrollments e ON c.course_id = e.course_id
+LEFT JOIN 
+    users u_student ON e.student_id = u_student.user_id
+LEFT JOIN 
+    reviews r ON c.course_id = r.course_id AND e.student_id = r.student_id;
