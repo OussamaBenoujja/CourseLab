@@ -10,10 +10,15 @@ CREATE TABLE users (
     last_name VARCHAR(100) NOT NULL,
     role ENUM('student', 'teacher', 'admin') NOT NULL,
     profile_image TEXT,
-    banner_image TEXT, 
-    bio TEXT NULL, 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
+    banner_image TEXT,
+    bio TEXT, 
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tags Table
+CREATE TABLE tags (
+    tag_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE
 );
 
 -- Courses Table
@@ -27,7 +32,7 @@ CREATE TABLE courses (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     content TEXT, -- stores HTML content
     content_type ENUM('video', 'text') DEFAULT 'text',
-    FOREIGN KEY (teacher_id) REFERENCES Users(user_id)
+    FOREIGN KEY (teacher_id) REFERENCES users(user_id)
 );
 
 -- Enrollments Table
@@ -37,8 +42,8 @@ CREATE TABLE enrollments (
     course_id INT,
     enrollment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     completion_status BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (student_id) REFERENCES Users(user_id),
-    FOREIGN KEY (course_id) REFERENCES Courses(course_id)
+    FOREIGN KEY (student_id) REFERENCES users(user_id),
+    FOREIGN KEY (course_id) REFERENCES courses(course_id)
 );
 
 -- Certificates Table
@@ -48,14 +53,8 @@ CREATE TABLE certificates (
     course_id INT,
     certificate_data LONGBLOB, -- Stores PDF data
     issued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES Users(user_id),
-    FOREIGN KEY (course_id) REFERENCES Courses(course_id)
-);
-
--- Tags Table
-CREATE TABLE tags (
-    tag_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE
+    FOREIGN KEY (student_id) REFERENCES users(user_id),
+    FOREIGN KEY (course_id) REFERENCES courses(course_id)
 );
 
 -- CourseTags Table
@@ -63,8 +62,8 @@ CREATE TABLE coursetags (
     course_id INT,
     tag_id INT,
     PRIMARY KEY (course_id, tag_id),
-    FOREIGN KEY (course_id) REFERENCES Courses(course_id),
-    FOREIGN KEY (tag_id) REFERENCES Tags(tag_id)
+    FOREIGN KEY (course_id) REFERENCES courses(course_id),
+    FOREIGN KEY (tag_id) REFERENCES tags(tag_id)
 );
 
 -- Reviews Table
@@ -76,14 +75,11 @@ CREATE TABLE reviews (
     rating INT CHECK (rating BETWEEN 1 AND 5),
     reviewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (student_id, course_id),
-    FOREIGN KEY (student_id) REFERENCES Users(user_id),
-    FOREIGN KEY (course_id) REFERENCES Courses(course_id)
+    FOREIGN KEY (student_id) REFERENCES users(user_id),
+    FOREIGN KEY (course_id) REFERENCES courses(course_id)
 );
 
-
-
--- Course detail view 
-
+-- Course detail view
 CREATE VIEW course_details AS
 SELECT 
     c.course_id,
