@@ -4,7 +4,20 @@ require_once 'User.php';
 
 class Teacher extends User
 {
+    
     private $createdCourses = [];
+
+    
+    public function __construct(PDO $db)
+    {
+        parent::__construct($db);
+    }
+
+    public function signup()
+    {
+        $this->setRole('teacher');
+        return parent::signup();
+    }
 
     public function addCourse($course)
     {
