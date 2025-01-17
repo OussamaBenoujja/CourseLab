@@ -6,7 +6,7 @@
 
 $host = 'localhost';
 $dbname = 'courselab';
-$username = 'osama';
+$username = 'root';
 $password = 'osama';
 
 
