@@ -80,6 +80,25 @@ class Category{
         return true;
     }
 
+    public function getAllCategories()
+    {
+        $sql = "SELECT * FROM categories";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $result;
+    }
+
+    public function getCategoryById($category_id)
+    {
+        $sql = "SELECT * FROM categories WHERE category_id = :category_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['category_id' => $category_id]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result;
+    }
+
+    
 
 }
 
