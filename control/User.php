@@ -1,6 +1,6 @@
 <?php
 
-require_once '../data/db_config.php';
+require_once __DIR__ .'\..\data\db_config.php';
 
 class User
 {
@@ -16,7 +16,7 @@ class User
     protected $banner_image;
     protected $bio;
 
-    function __contruct($db, $user_id, $email, $password, $first_name, $last_name, $role, $profile_image, $created_at, $banner_image, $bio)
+    function __construct(PDO $db, $user_id = null, $email = null, $password = null, $first_name = null, $last_name = null, $role = null, $profile_image = null, $created_at = null, $banner_image = null, $bio = null)
     {
         $this->db = $db;
         $this->user_id = $user_id;
@@ -135,8 +135,7 @@ class User
     
     public function signup()
     {
-        if ($this->role == 'Student' || $this->role == 'Teacher') {
-
+        if ($this->role == 'student' || $this->role == 'teacher') {
             $query = "INSERT INTO users (email, password, first_name, last_name, role) VALUES (:email, :password, :first_name, :last_name, :role)";
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':email', $this->email);
@@ -146,8 +145,7 @@ class User
             $stmt->bindParam(':role', $this->role);
             $stmt->execute();
             return $this->db->lastInsertId();
-
-        }elseif ($this->role == 'Admin') {
+        } elseif ($this->role == 'admin') {
             return false;
         }
     }
@@ -157,18 +155,14 @@ class User
 
     public function login($email, $password)
     {
-        $query = "SELECT * FROM users WHERE email = :email AND password = :password";
+        $query = "SELECT * FROM users WHERE email = :email";
         $stmt = $this->db->prepare($query);
         $stmt->bindParam(':email', $email);
-        $stmt->bindParam(':password', $password);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        if($result)
-        {
+        if ($result && password_verify($password, $result['password'])) {
             return $result;
-        }
-        else
-        {
+        } else {
             return false;
         }
     }
