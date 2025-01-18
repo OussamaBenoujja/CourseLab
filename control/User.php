@@ -179,6 +179,7 @@ class User
         $fields = [];
         $params = [];
     
+        
         if (!empty($this->first_name)) {
             $fields[] = 'first_name = :first_name';
             $params[':first_name'] = $this->first_name;
@@ -204,17 +205,25 @@ class User
             $params[':banner_image'] = $this->banner_image;
         }
     
-        if (!empty($fields)) {
-            $query = "UPDATE users SET " . implode(', ', $fields) . " WHERE user_id = :user_id";
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':user_id', $this->user_id);
-            foreach ($params as $key => $value) {
-                $stmt->bindParam($key, $value);
-            }
-            return $stmt->execute();
-        } else {
-            return true; 
+        
+        if (empty($fields)) {
+            return true;
         }
+    
+        
+        $query = "UPDATE users SET " . implode(', ', $fields) . " WHERE user_id = :user_id";
+        $stmt = $this->db->prepare($query);
+    
+        
+        $stmt->bindParam(':user_id', $this->user_id);
+    
+        
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+    
+        
+        return $stmt->execute();
     }
 
 
