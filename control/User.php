@@ -174,19 +174,47 @@ class User
         header('Location: ../home.php');
     }
 
-    public function updateProfile($user_id, $first_name, $last_name, $email, $bio, $profile_image, $banner_image)
+    public function updateProfile()
     {
-        $query = "UPDATE users SET first_name = :first_name, last_name = :last_name, email = :email, bio = :bio, profile_image = :profile_image, banner_image = :banner_image WHERE user_id = :user_id";
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':first_name', $first_name);
-        $stmt->bindParam(':last_name', $last_name);
-        $stmt->bindParam(':email', $email);
-        $stmt->bindParam(':bio', $bio);
-        $stmt->bindParam(':profile_image', $profile_image);
-        $stmt->bindParam(':banner_image', $banner_image);
-        $stmt->bindParam(':user_id', $user_id);
-        $stmt->execute();
-        return true;
+        $fields = [];
+        $params = [];
+    
+        if (!empty($this->first_name)) {
+            $fields[] = 'first_name = :first_name';
+            $params[':first_name'] = $this->first_name;
+        }
+        if (!empty($this->last_name)) {
+            $fields[] = 'last_name = :last_name';
+            $params[':last_name'] = $this->last_name;
+        }
+        if (!empty($this->email)) {
+            $fields[] = 'email = :email';
+            $params[':email'] = $this->email;
+        }
+        if (!empty($this->bio)) {
+            $fields[] = 'bio = :bio';
+            $params[':bio'] = $this->bio;
+        }
+        if (isset($this->profile_image)) {
+            $fields[] = 'profile_image = :profile_image';
+            $params[':profile_image'] = $this->profile_image;
+        }
+        if (isset($this->banner_image)) {
+            $fields[] = 'banner_image = :banner_image';
+            $params[':banner_image'] = $this->banner_image;
+        }
+    
+        if (!empty($fields)) {
+            $query = "UPDATE users SET " . implode(', ', $fields) . " WHERE user_id = :user_id";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':user_id', $this->user_id);
+            foreach ($params as $key => $value) {
+                $stmt->bindParam($key, $value);
+            }
+            return $stmt->execute();
+        } else {
+            return true; 
+        }
     }
 
 
