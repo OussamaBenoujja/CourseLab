@@ -13,19 +13,27 @@ class Database {
         }
     }
 
+
     public static function getInstance($dsn = null, $username = null, $password = null) {
+
         if (self::$instance === null) {
+
             $dsn = $dsn ?? 'mysql:host=localhost;dbname=your_database_name';
             $username = $username ?? 'your_username';
             $password = $password ?? 'your_password';
             self::$instance = new Database($dsn, $username, $password);
+            
         }
+
         return self::$instance;
     }
+
 
     public function getConnection() {
         return $this->pdo;
     }
+
+
 }
 
 class User {
