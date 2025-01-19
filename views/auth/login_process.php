@@ -22,6 +22,13 @@ if ($result) {
     
     $_SESSION['user_id'] = $result['user_id'];
     $_SESSION['role'] = $result['role'];
+    $_SESSION['first_name'] = $result['first_name'];
+    $_SESSION['last_name'] = $result['last_name']; 
+    $_SESSION['email'] = $result['email'];
+    $_SESSION['profile_image'] = $result['profile_image'];
+    $_SESSION['banner_image'] = $result['banner_image'];
+    $_SESSION['bio'] = $result['bio'];
+    
     header('Location: dashboard.php');
     exit();
 } else {
