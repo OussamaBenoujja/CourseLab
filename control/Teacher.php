@@ -1,61 +1,65 @@
 <?php
 
 require_once 'User.php';
+require_once 'Course.php';
 
 class Teacher extends User
 {
-    
-    private $createdCourses = [];
 
-    
-    public function __construct(PDO $db)
+    public function __construct(PDO $db, $user_id)
     {
-        parent::__construct($db);
+        parent::__construct($db, $user_id);
+        $this->db = $db;
+        $this->user_id = $user_id;
     }
 
-    public function signup()
+    public function getTeacherCourses()
     {
-        $this->setRole('teacher');
-        return parent::signup();
+        $stmt = $this->db->prepare("SELECT * FROM course_details WHERE teacher_id = :user_id");
+        $stmt->bindParam(':user_id', $this->user_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $courses;
     }
 
-    public function addCourse($course)
+    public function getTeacherStats()
     {
-        $this->createdCourses[] = $course;
-        return true;
-    }
+        $stats = array();
 
-    public function editCourse($course)
-    {
-        foreach ($this->createdCourses as $key => $createdCourse) {
-            if ($createdCourse->getCourseId() === $course->getCourseId()) {
-                $this->createdCourses[$key] = $course;
-                return true;
-            }
-        }
-        return false;
-    }
+        // Total Courses
+        $stmt = $this->db->prepare("SELECT COUNT(*) AS total FROM courses WHERE teacher_id = :user_id");
+        $stmt->bindParam(':user_id', $this->user_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stats['total_courses'] = $result['total'];
 
-    public function deleteCourse($course)
-    {
-        foreach ($this->createdCourses as $key => $createdCourse) {
-            if ($createdCourse->getCourseId() === $course->getCourseId()) {
-                unset($this->createdCourses[$key]);
-                return true;
-            }
-        }
-        return false;
-    }
+        // Total Students
+        $stmt = $this->db->prepare("
+            SELECT COUNT(DISTINCT student_id) AS total
+            FROM enrollments
+            WHERE course_id IN (
+                SELECT course_id FROM courses WHERE teacher_id = :user_id
+            )
+        ");
+        $stmt->bindParam(':user_id', $this->user_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stats['total_students'] = $result['total'];
 
-    public function viewStatistics()
-    {
-        $statistics = [
-            'total_courses' => count($this->createdCourses),
-            'total_students' => 0,
-            'average_rating' => 0,
-        ];
+        // Average Rating
+        $stmt = $this->db->prepare("
+            SELECT AVG(rating) AS average
+            FROM reviews
+            WHERE course_id IN (
+                SELECT course_id FROM courses WHERE teacher_id = :user_id
+            )
+        ");
+        $stmt->bindParam(':user_id', $this->user_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stats['average_rating'] = $result['average'] ?: 0;
 
-        return $statistics;
+        return $stats;
     }
 }
 ?>
