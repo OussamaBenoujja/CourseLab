@@ -114,3 +114,15 @@ LEFT JOIN
     users u_student ON e.student_id = u_student.user_id
 LEFT JOIN 
     reviews r ON c.course_id = r.course_id AND e.student_id = r.student_id;
+
+
+-- Categories Table
+CREATE TABLE categories (
+    category_id INT AUTO_INCREMENT PRIMARY KEY,
+    category_name VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE courses MODIFY category INT;
+ALTER TABLE courses ADD CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES categories(category_id);
