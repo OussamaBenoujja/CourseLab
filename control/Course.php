@@ -2,212 +2,314 @@
 
 require_once '../data/db_config.php';
 
-class Course
+
+abstract class Course
 {
     protected PDO $db;
-    private $course_id;
-    private $title;
-    private $description;
-    private $teacher_id;
-    private $category;
-    private $banner_image;
-    private $created_at;
-    private $content;
-    private $content_type;
-    private $enrolledStudents = [];
-    private $reviews = [];
-    private $tags = [];
+    protected $course_id;
+    protected $title;
+    protected $description;
+    protected $teacher_id;
+    protected $category;
+    protected $banner_image;
+    protected $created_at;
+    protected $content;
+    protected $content_type;
 
-    public function __construct(PDO $db, $course_id, $title, $description, $teacher_id, $category, $banner_image, $created_at, $content, $content_type)
+    public function __construct(PDO $db, $course_id = null)
     {
         $this->db = $db;
-        $this->course_id = $course_id;
+        if ($course_id) {
+            $this->loadCourse($course_id);
+        }
+    }
+
+
+    //getters
+
+    public function getCourseId()
+    {
+        return $this->course_id;
+    }
+
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    public function getTeacherId()
+    {
+        return $this->teacher_id;
+    }
+
+    public function getCategory()
+    {
+        return $this->category;
+    }
+
+    public function getBannerImage()
+    {
+        return $this->banner_image;
+    }
+
+    public function getCreatedAt()
+    {
+        return $this->created_at;
+    }
+
+    public function getContent()
+    {
+        return $this->content;
+    }
+
+    public function getTags()
+    {
+        return $this->tags;
+    }
+
+    public function getReviews()
+    {
+        return $this->reviews;
+    }
+
+    public function getEnrollments()
+    {
+        return $this->enrollments;
+    }
+
+    //setters
+
+    public function setTitle($title)
+    {
         $this->title = $title;
+    }
+
+    public function setDescription($description)
+    {
         $this->description = $description;
+    }
+
+    public function setTeacherId($teacher_id)
+    {
         $this->teacher_id = $teacher_id;
+    }
+
+    public function setCategory($category)
+    {
         $this->category = $category;
+    }
+
+    public function setBannerImage($banner_image)
+    {
         $this->banner_image = $banner_image;
-        $this->created_at = $created_at;
+    }
+
+    public function setContent($content)
+    {
         $this->content = $content;
+    }
+
+    public function setContentType($content_type)
+    {
         $this->content_type = $content_type;
     }
 
-    // Getters and Setters (omitted for brevity)
 
-    public function saveContent($content, $content_type)
+
+
+    public function loadCourse($course_id)
     {
-        $this->content = $content;
-        $this->content_type = $content_type;
+        $stmt = $this->db->prepare("SELECT * FROM courses WHERE course_id = :course_id");
+        $stmt->bindParam(':course_id', $course_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($result) {
+            $this->course_id = $result['course_id'];
+            $this->title = $result['title'];
+            $this->description = $result['description'];
+            $this->teacher_id = $result['teacher_id'];
+            $this->category = $result['category'];
+            $this->banner_image = $result['banner_image'];
+            $this->created_at = $result['created_at'];
+            $this->content = $result['content'];
+            $this->content_type = $result['content_type'];
+        } else {
+            throw new Exception("Course not found.");
+        }
+    }
 
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM courses WHERE course_id = :course_id");
+    public function getTitle()
+    {
+        return $this->title;
+    }
+
+    public function getContentType()
+    {
+        return $this->content_type;
+    }
+
+    public function getStudentCount()
+    {
+        $stmt = $this->db->prepare("SELECT COUNT(*) AS count FROM enrollments WHERE course_id = :course_id");
         $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
         $stmt->execute();
-        $count = $stmt->fetchColumn();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['count'];
+    }
 
-        if ($count > 0) {
-            $stmt = $this->db->prepare("UPDATE courses SET title = :title, description = :description, teacher_id = :teacher_id, category = :category, banner_image = :banner_image, created_at = :created_at, content = :content, content_type = :content_type WHERE course_id = :course_id");
-            $stmt->bindParam(':title', $this->title);
-            $stmt->bindParam(':description', $this->description);
-            $stmt->bindParam(':teacher_id', $this->teacher_id, PDO::PARAM_INT);
-            $stmt->bindParam(':category', $this->category);
-            $stmt->bindParam(':banner_image', $this->banner_image);
-            $stmt->bindParam(':created_at', $this->created_at);
-            $stmt->bindParam(':content', $this->content);
-            $stmt->bindParam(':content_type', $this->content_type);
+    public function getAverageRating()
+    {
+        $stmt = $this->db->prepare("SELECT AVG(rating) AS average FROM reviews WHERE course_id = :course_id");
+        $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['average'] ?: 0;
+    }
+
+
+    public function saveCourse() {
+        if ($this->course_id) {
+            $stmt = $this->db->prepare("UPDATE courses SET title = :title, description = :description, teacher_id = :teacher_id, category = :category, banner_image = :banner_image, content = :content, content_type = :content_type WHERE course_id = :course_id");
             $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
         } else {
-            $stmt = $this->db->prepare("INSERT INTO courses (course_id, title, description, teacher_id, category, banner_image, created_at, content, content_type) VALUES (:course_id, :title, :description, :teacher_id, :category, :banner_image, :created_at, :content, :content_type)");
-            $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
-            $stmt->bindParam(':title', $this->title);
-            $stmt->bindParam(':description', $this->description);
-            $stmt->bindParam(':teacher_id', $this->teacher_id, PDO::PARAM_INT);
-            $stmt->bindParam(':category', $this->category);
-            $stmt->bindParam(':banner_image', $this->banner_image);
-            $stmt->bindParam(':created_at', $this->created_at);
-            $stmt->bindParam(':content', $this->content);
-            $stmt->bindParam(':content_type', $this->content_type);
+            $stmt = $this->db->prepare("INSERT INTO courses (title, description, teacher_id, category, banner_image, content, content_type) VALUES (:title, :description, :teacher_id, :category, :banner_image, :content, :content_type)");
         }
-
+        $stmt->bindParam(':title', $this->title);
+        $stmt->bindParam(':description', $this->description);
+        $stmt->bindParam(':teacher_id', $this->teacher_id, PDO::PARAM_INT);
+        $stmt->bindParam(':category', $this->category);
+        $stmt->bindParam(':banner_image', $this->banner_image);
+        $stmt->bindParam(':content', $this->content);
+        $stmt->bindParam(':content_type', $this->content_type);
         $stmt->execute();
-        return true;
+        if (!$this->course_id) {
+            $this->course_id = $this->db->lastInsertId();
+        }
+        // Save tags association
+        $this->saveTags();
     }
 
-    public static function getAllCourses(PDO $db)
-    {
-        $courses = [];
-        $stmt = $db->prepare("SELECT DISTINCT course_id, title, description, category, banner_image, course_created_at, content, content_type, teacher_id FROM course_details");
-        $stmt->execute();
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        foreach ($result as $row) {
-            $course = new Course(
-                $db,
-                $row['course_id'],
-                $row['title'],
-                $row['description'],
-                $row['teacher_id'],
-                $row['category'],
-                $row['banner_image'],
-                $row['course_created_at'],
-                $row['content'],
-                $row['content_type']
-            );
-            $courses[] = $course;
-        }
-
-        return $courses;
-    }
-
-    public static function getCourseById(PDO $db, $id)
-    {
-        $stmt = $db->prepare("SELECT * FROM course_details WHERE course_id = :id");
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        if (empty($rows)) {
-            return null;
-        }
-
-        $course = new Course(
-            $db,
-            $rows[0]['course_id'],
-            $rows[0]['title'],
-            $rows[0]['description'],
-            $rows[0]['teacher_id'],
-            $rows[0]['category'],
-            $rows[0]['banner_image'],
-            $rows[0]['course_created_at'],
-            $rows[0]['content'],
-            $rows[0]['content_type']
-        );
-
-        foreach ($rows as $row) {
-            if (!empty($row['student_id'])) {
-                $student = [
-                    'id' => $row['student_id'],
-                    'first_name' => $row['student_first_name'],
-                    'last_name' => $row['student_last_name'],
-                    'profile_image' => $row['student_profile_image'],
-                    'enrollment_date' => $row['enrollment_date'],
-                    'completion_status' => $row['completion_status']
-                ];
-                $course->enrolledStudents[] = $student;
-            }
-
-            if (!empty($row['review_id'])) {
-                $review = [
-                    'id' => $row['review_id'],
-                    'comment' => $row['comment'],
-                    'rating' => $row['rating'],
-                    'reviewed_at' => $row['reviewed_at']
-                ];
-                $course->reviews[] = $review;
-            }
-        }
-
-        return $course;
-    }
-
-
-    public function deleteCourse()
-{
-    try {
-        // Start a database transaction
-        $this->db->beginTransaction();
-
-        // Retrieve content and banner_image paths
-        $stmt = $this->db->prepare("SELECT content, content_type, banner_image FROM courses WHERE course_id = :course_id");
-        $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($row) {
-            // Delete content file if it's a video
-            if ($row['content_type'] == 'video' || $row['content_type'] == 'file/html') {
-                $contentPath = $row['content'];
-                if (file_exists($contentPath)) {
-                    unlink($contentPath);
-                }
-            }
-
-            // Delete banner image file
-            $bannerImagePath = $row['banner_image'];
-            if (file_exists($bannerImagePath)) {
-                unlink($bannerImagePath);
-            }
-        }
-
-        // Delete related database entries
-        $stmt = $this->db->prepare("DELETE FROM enrollments WHERE course_id = :course_id");
-        $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
-        $stmt->execute();
-
-        $stmt = $this->db->prepare("DELETE FROM reviews WHERE course_id = :course_id");
-        $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
-        $stmt->execute();
-
-        $stmt = $this->db->prepare("DELETE FROM certificates WHERE course_id = :course_id");
-        $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
-        $stmt->execute();
-
+    public function deleteCourse() {
+        // Delete course tags associations
         $stmt = $this->db->prepare("DELETE FROM coursetags WHERE course_id = :course_id");
         $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
         $stmt->execute();
-
+        // Delete reviews
+        $stmt = $this->db->prepare("DELETE FROM reviews WHERE course_id = :course_id");
+        $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
+        $stmt->execute();
+        // Delete enrollments
+        $stmt = $this->db->prepare("DELETE FROM enrollments WHERE course_id = :course_id");
+        $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
+        $stmt->execute();
+        // Delete the course
         $stmt = $this->db->prepare("DELETE FROM courses WHERE course_id = :course_id");
         $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
         $stmt->execute();
-
-        // Commit the transaction
-        $this->db->commit();
-        return true;
-    } catch (Exception $e) {
-        // Roll back the transaction in case of any error
-        $this->db->rollBack();
-        throw $e;
     }
-}
 
+    public function addTag(Tag $tag) {
+        // Check if tag is already associated
+        $stmt = $this->db->prepare("SELECT * FROM coursetags WHERE course_id = :course_id AND tag_id = :tag_id");
+        $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
+        $stmt->bindParam(':tag_id', $tag->tag_id, PDO::PARAM_INT);
+        $stmt->execute();
+        if (!$stmt->fetch()) {
+            $stmt = $this->db->prepare("INSERT INTO coursetags (course_id, tag_id) VALUES (:course_id, :tag_id)");
+            $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
+            $stmt->bindParam(':tag_id', $tag->tag_id, PDO::PARAM_INT);
+            $stmt->execute();
+            $this->tags[] = $tag;
+        }
+    }
+
+    public function removeTag(Tag $tag) {
+        $stmt = $this->db->prepare("DELETE FROM coursetags WHERE course_id = :course_id AND tag_id = :tag_id");
+        $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
+        $stmt->bindParam(':tag_id', $tag->tag_id, PDO::PARAM_INT);
+        $stmt->execute();
+        // Remove from tags array
+        foreach ($this->tags as $key => $t) {
+            if ($t->tag_id == $tag->tag_id) {
+                unset($this->tags[$key]);
+                break;
+            }
+        }
+    }
+
+    public function addReview(Review $review) {
+        $review->course_id = $this->course_id;
+        $review->saveReview();
+        $this->reviews[] = $review;
+    }
+
+    public function loadTags() {
+        $stmt = $this->db->prepare("SELECT tag_id FROM coursetags WHERE course_id = :course_id");
+        $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $tags = array();
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $tag = new Tag($this->db, $row['tag_id']);
+            $tags[] = $tag;
+        }
+        $this->tags = $tags;
+    }
+
+    public function loadReviews() {
+        $stmt = $this->db->prepare("SELECT review_id FROM reviews WHERE course_id = :course_id");
+        $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $reviews = array();
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $review = new Review($this->db, $row['review_id']);
+            $reviews[] = $review;
+        }
+        $this->reviews = $reviews;
+    }
+
+    public function loadEnrollments() {
+        $stmt = $this->db->prepare("SELECT enrollment_id FROM enrollments WHERE course_id = :course_id");
+        $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $enrollments = array();
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $enrollment = new Enrollment($this->db, $row['enrollment_id']);
+            $enrollments[] = $enrollment;
+        }
+        $this->enrollments = $enrollments;
+    }
+
+    public function saveTags() {
+        // First, delete all existing tags for this course
+        $stmt = $this->db->prepare("DELETE FROM coursetags WHERE course_id = :course_id");
+        $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
+        $stmt->execute();
+        // Then, insert new associations
+        foreach ($this->tags as $tag) {
+            $this->addTag($tag);
+        }
+    }
+
+    public static function getAllCourses(PDO $db) {
+        $stmt = $db->prepare("SELECT * FROM courses");
+        $stmt->execute();
+        $courses = array();
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $course = new Course($db, $row['course_id']);
+            $courses[] = $course;
+        }
+        return $courses;
+    }
+
+    public static function getCourseById(PDO $db, $course_id) {
+        $stmt = $db->prepare("SELECT * FROM course_details WHERE course_id = :course_id");
+        $stmt->bindParam(':course_id', $course_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $course = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $course;
+    }
+
+    // Abstract methods
+    abstract public function displayContent();
+    abstract public function saveContent();
 }
-?>
