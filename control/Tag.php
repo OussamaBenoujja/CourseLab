@@ -1,6 +1,6 @@
 <?php
 
-require_once '../data/db_config.php';
+require_once(dirname(__FILE__) . '/../data/db_config.php');
 
 class Tag {
     protected $db;
