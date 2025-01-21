@@ -15,6 +15,10 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE users 
+ADD COLUMN isBanned ENUM('yes', 'no') DEFAULT 'no',
+ADD COLUMN isActive ENUM('yes', 'no') DEFAULT 'yes';
+
 -- Tags Table
 CREATE TABLE tags (
     tag_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -79,13 +83,13 @@ CREATE TABLE reviews (
     FOREIGN KEY (course_id) REFERENCES courses(course_id)
 );
 
--- Course detail view
-CREATE VIEW course_details AS
+CREATE OR REPLACE VIEW course_details AS
 SELECT 
     c.course_id,
     c.title,
     c.description,
-    c.category,
+    c.category AS category_id,
+    cat.category_name,
     c.banner_image,
     c.created_at AS course_created_at,
     c.content,
@@ -109,11 +113,14 @@ FROM
 JOIN 
     users u ON c.teacher_id = u.user_id
 LEFT JOIN 
+    categories cat ON c.category = cat.category_id
+LEFT JOIN 
     enrollments e ON c.course_id = e.course_id
 LEFT JOIN 
     users u_student ON e.student_id = u_student.user_id
 LEFT JOIN 
     reviews r ON c.course_id = r.course_id AND e.student_id = r.student_id;
+
 
 
 -- Categories Table
@@ -126,3 +133,11 @@ CREATE TABLE categories (
 
 ALTER TABLE courses MODIFY category INT;
 ALTER TABLE courses ADD CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES categories(category_id);
+
+
+ALTER TABLE users 
+MODIFY profile_image VARCHAR(255) DEFAULT '../up/defaultPFP.jpg';
+
+ALTER TABLE users 
+MODIFY banner_image VARCHAR(255) DEFAULT '../up/defaultBanner.jpg';
+
