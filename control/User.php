@@ -29,6 +29,7 @@ class User
         $this->created_at = $created_at;
         $this->banner_image = $banner_image;
         $this->bio = $bio;
+        $this->loadprofile();
     }
 
     //getters
@@ -226,6 +227,44 @@ class User
         return $stmt->execute();
     }
 
+    public function loadprofile(){
+        $query = "SELECT * FROM users WHERE user_id = :user_id";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':user_id', $this->user_id);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($result) {
+            $this->email = $result['email'];
+            $this->first_name = $result['first_name'];
+            $this->last_name = $result['last_name'];
+            $this->bio = $result['bio'];
+            $this->profile_image = $result['profile_image'];
+            $this->banner_image = $result['banner_image'];
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function storeProfile() {
+        $query = "UPDATE users SET 
+            first_name = :first_name, 
+            last_name = :last_name, 
+            profile_image = :profile_image, 
+            banner_image = :banner_image, 
+            bio = :bio 
+            WHERE user_id = :user_id";
+            
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':first_name', $this->first_name);
+        $stmt->bindParam(':last_name', $this->last_name);
+        $stmt->bindParam(':profile_image', $this->profile_image);
+        $stmt->bindParam(':banner_image', $this->banner_image);
+        $stmt->bindParam(':bio', $this->bio);
+        $stmt->bindParam(':user_id', $this->user_id);
+        
+        return $stmt->execute();
+    }
 
 }
 
