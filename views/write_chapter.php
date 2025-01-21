@@ -21,7 +21,6 @@ $categories = $category->getAllCategories();
 $tag = new Tag($db);
 $tags = $tag->getAllTags();
 
-// Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     error_log("Processing form submission");
     
