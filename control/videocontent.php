@@ -9,13 +9,11 @@ class VideoContent extends Course {
     }
 
     public function displayContent() {
-        // Logic to display video content
         echo "<video controls><source src='{$this->content}' type='video/mp4'>Your browser does not support the video tag.</video>";
     }
 
     public function saveContent() {
-        // Logic to save video content
-        // For example, save the video file to a server or database
+
         $this->saveCourse();
     }
 }
