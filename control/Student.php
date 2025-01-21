@@ -33,27 +33,49 @@ class Student extends User
         }
     }
 
-
     public function joinCourse($course)
     {
         
-        $this->enrolledCourses[] = $course;
-        return true;
+        $query = "SELECT COUNT(*) FROM enrollments WHERE student_id = :student_id AND course_id = :course_id";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':student_id', $this->user_id);
+        $stmt->bindParam(':course_id', $course);
+        $stmt->execute();
+        
+        if ($stmt->fetchColumn() > 0) {
+            return false;
+        }
+        
+        $query = "INSERT INTO enrollments (student_id, course_id) VALUES (:student_id, :course_id)";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':student_id', $this->user_id);
+        $stmt->bindParam(':course_id', $course);
+        
+        
+        if ($stmt->execute()) {
+            return true;
+        }
+        
+        return false;
     }
-
+    
     public function viewMyCourses()
     {
-        return $this->enrolledCourses;
+        $query = "SELECT * FROM course_details WHERE student_id = :student_id";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':student_id', $this->user_id);
+        $stmt->execute();
+        $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $courses;
     }
 
     public function leaveCourse($course)
     {
-        $key = array_search($course, $this->enrolledCourses);
-        if ($key !== false) {
-            unset($this->enrolledCourses[$key]);
-            return true;
-        }
-        return false;
+        $query = "DELETE FROM enrollments WHERE student_id = :student_id AND course_id = :course_id";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':student_id', $this->user_id);
+        $stmt->bindParam(':course_id', $course);
+        return $stmt->execute();
     }
 
     public function signup()
