@@ -1,6 +1,7 @@
 <?php
 
-require_once '../data/db_config.php';
+require_once(dirname(__FILE__) . '/../data/db_config.php');
+require_once 'Tag.php';
 
 
 abstract class Course
@@ -11,10 +12,12 @@ abstract class Course
     protected $description;
     protected $teacher_id;
     protected $category;
+    protected $category_name;
     protected $banner_image;
     protected $created_at;
     protected $content;
     protected $content_type;
+    protected $tags = [];
 
     public function __construct(PDO $db, $course_id = null)
     {
@@ -26,6 +29,10 @@ abstract class Course
 
 
     //getters
+    public function getCategory_name()
+    {
+        return $this->category_name;
+    }
 
     public function getCourseId()
     {
@@ -62,9 +69,9 @@ abstract class Course
         return $this->content;
     }
 
-    public function getTags()
-    {
-        return $this->tags;
+     public function getTags()
+     {
+         return $this->tags;
     }
 
     public function getReviews()
@@ -78,6 +85,11 @@ abstract class Course
     }
 
     //setters
+
+    public function setCategory_name($category_name)
+    {
+        $this->category_name = $category_name;
+    }
 
     public function setTitle($title)
     {
@@ -119,7 +131,7 @@ abstract class Course
 
     public function loadCourse($course_id)
     {
-        $stmt = $this->db->prepare("SELECT * FROM courses WHERE course_id = :course_id");
+        $stmt = $this->db->prepare("SELECT * FROM course_details WHERE course_id = :course_id");
         $stmt->bindParam(':course_id', $course_id, PDO::PARAM_INT);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -128,11 +140,13 @@ abstract class Course
             $this->title = $result['title'];
             $this->description = $result['description'];
             $this->teacher_id = $result['teacher_id'];
-            $this->category = $result['category'];
+            $this->category = $result['category_id'];
             $this->banner_image = $result['banner_image'];
-            $this->created_at = $result['created_at'];
+            $this->created_at = $result['course_created_at'];
             $this->content = $result['content'];
             $this->content_type = $result['content_type'];
+            $this->category_name = $result['category_name'];
+            $this->loadTags();
         } else {
             throw new Exception("Course not found.");
         }
@@ -190,26 +204,24 @@ abstract class Course
     }
 
     public function deleteCourse() {
-        // Delete course tags associations
+
         $stmt = $this->db->prepare("DELETE FROM coursetags WHERE course_id = :course_id");
         $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
         $stmt->execute();
-        // Delete reviews
         $stmt = $this->db->prepare("DELETE FROM reviews WHERE course_id = :course_id");
         $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
         $stmt->execute();
-        // Delete enrollments
         $stmt = $this->db->prepare("DELETE FROM enrollments WHERE course_id = :course_id");
         $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
         $stmt->execute();
-        // Delete the course
         $stmt = $this->db->prepare("DELETE FROM courses WHERE course_id = :course_id");
         $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
         $stmt->execute();
+
     }
 
     public function addTag(Tag $tag) {
-        // Check if tag is already associated
+
         $stmt = $this->db->prepare("SELECT * FROM coursetags WHERE course_id = :course_id AND tag_id = :tag_id");
         $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
         $stmt->bindParam(':tag_id', $tag->tag_id, PDO::PARAM_INT);
@@ -228,7 +240,7 @@ abstract class Course
         $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
         $stmt->bindParam(':tag_id', $tag->tag_id, PDO::PARAM_INT);
         $stmt->execute();
-        // Remove from tags array
+
         foreach ($this->tags as $key => $t) {
             if ($t->tag_id == $tag->tag_id) {
                 unset($this->tags[$key]);
@@ -272,32 +284,24 @@ abstract class Course
         $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
         $stmt->execute();
         $enrollments = array();
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $enrollment = new Enrollment($this->db, $row['enrollment_id']);
-            $enrollments[] = $enrollment;
-        }
         $this->enrollments = $enrollments;
     }
 
     public function saveTags() {
-        // First, delete all existing tags for this course
+        
         $stmt = $this->db->prepare("DELETE FROM coursetags WHERE course_id = :course_id");
         $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
         $stmt->execute();
-        // Then, insert new associations
+        
         foreach ($this->tags as $tag) {
             $this->addTag($tag);
         }
     }
 
     public static function getAllCourses(PDO $db) {
-        $stmt = $db->prepare("SELECT * FROM courses");
+        $stmt = $db->prepare("SELECT * FROM course_details");
         $stmt->execute();
-        $courses = array();
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $course = new Course($db, $row['course_id']);
-            $courses[] = $course;
-        }
+        $courses = $stmt->fetchALL(PDO::FETCH_ASSOC);
         return $courses;
     }
 
@@ -309,7 +313,72 @@ abstract class Course
         return $course;
     }
 
-    // Abstract methods
+
+    public static function getFilteredCourses($db, $filter, $search, $page, $items_per_page) {
+        $offset = ($page - 1) * $items_per_page;
+        $query = "SELECT * FROM courses WHERE 1=1";
+
+        if ($filter === 'popular') {
+            $query .= " ORDER BY (SELECT COUNT(*) FROM enrollments WHERE course_id = courses.course_id) DESC";
+        } elseif ($filter === 'recent') {
+            $query .= " ORDER BY created_at DESC";
+        }
+
+        if ($search) {
+            $query .= " AND (title LIKE :search OR description LIKE :search)";
+        }
+
+        $query .= " LIMIT :offset, :items_per_page";
+
+        $stmt = $db->prepare($query);
+
+        if ($search) {
+            $stmt->bindValue(':search', "%$search%", PDO::PARAM_STR);
+        }
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->bindValue(':items_per_page', $items_per_page, PDO::PARAM_INT);
+
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function getTotalCourses($db, $filter, $search) {
+        $query = "SELECT COUNT(*) as total FROM courses WHERE 1=1";
+
+        if ($filter === 'popular') {
+            $query .= " ORDER BY (SELECT COUNT(*) FROM enrollments WHERE course_id = courses.course_id) DESC";
+        } elseif ($filter === 'recent') {
+            $query .= " ORDER BY created_at DESC";
+        }
+
+        if ($search) {
+            $query .= " AND (title LIKE :search OR description LIKE :search)";
+        }
+
+        $stmt = $db->prepare($query);
+
+        if ($search) {
+            $stmt->bindValue(':search', "%$search%", PDO::PARAM_STR);
+        }
+
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    }
+
+    public function getEnrolledStudents() {
+        $stmt = $this->db->prepare("
+            SELECT u.user_id, u.first_name, u.last_name 
+            FROM enrollments e
+            JOIN users u ON e.student_id = u.user_id
+            WHERE e.course_id = :course_id
+        ");
+        $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+    
     abstract public function displayContent();
     abstract public function saveContent();
 }
