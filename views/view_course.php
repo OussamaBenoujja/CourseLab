@@ -1,50 +1,39 @@
 <?php
 
 
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit();
+}
+
 if (isset($_GET['id'])) {
 
     require_once '../control/Course.php';
+    require_once '../control/textcontent.php';
+    require_once '../control/User.php';
+    require_once '../control/Teacher.php';
     require_once '../data/db_config.php';
 
-    $course = Course::getCourseById($db, $_GET['id']);
 
+    $course = new TextContent($db, $_GET['id']);
 
-    if ($course) {
+    $course_id = $course->getCourseId();
+    $title = $course->getTitle();
+    $description = $course->getDescription();
+    $category = $course->getCategory();
+    $banner_image = $course->getBannerImage();
+    $course_created_at = $course->getCreatedAt();
+    $content = $course->getContent();
+    $content_type = $course->getContentType();
+    $teacher_id = $course->getTeacherId();
+    $tags = $course->getTags();
+    $category_name = $course->getCategory_name();
 
-        $course_id = $course['course_id'];
-        $title = $course['title'];
-        $description = $course['description'];
-        $category = $course['category'];
-        $banner_image = $course['banner_image'];
-        $course_created_at = $course['course_created_at'];
-        $content = $course['content'];
-        $content_type = $course['content_type'];
-        $teacher_id = $course['teacher_id'];
-        $teacher_first_name = $course['teacher_first_name'];
-        $teacher_last_name = $course['teacher_last_name'];
-        $teacher_profile_image = $course['teacher_profile_image'];
-        $student_id = $course['student_id'];
-        $student_first_name = $course['student_first_name'];
-        $student_last_name = $course['student_last_name'];
-        $student_profile_image = $course['student_profile_image'];
-        $enrollment_date = $course['enrollment_date'];
-        $completion_status = $course['completion_status'];
-        $review_id = $course['review_id'];
-        $comment = $course['comment'];
-        $rating = $course['rating'];
-        $reviewed_at = $course['reviewed_at'];
-
-    } else {
-
-        throw new Exception("Course not found.");
-
-    }
-} else {
-
-    throw new Exception("Course id not provided.");
-
+    $courseMaker = new Teacher($db, $teacher_id);
+    $teacher_first_name = $courseMaker->getFirstName();
+    $teacher_last_name = $courseMaker->getLastName();
+    $teacher_profile_image = $courseMaker->getProfileImage();
 }
-
 
 ?>
 
