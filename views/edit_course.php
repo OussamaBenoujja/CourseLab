@@ -1,51 +1,55 @@
 <?php
+
 session_start();
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
     header("Location: err_pages/404.php");
     exit();
 }
 
-// Include necessary files
+
 require_once '../data/db_config.php';
 require_once '../control/Course.php';
 require_once '../control/textcontent.php';
 require_once '../control/Category.php';
 require_once '../control/Tag.php';
 
-// Debugging function
+
 function debug_log($message, $data = null) {
     error_log($message . ($data ? ': ' . print_r($data, true) : ''));
 }
 
-// Retrieve course ID from GET parameters
+
+
 if (!isset($_GET['id'])) {
     die("Course ID is required.");
 }
 $course_id = $_GET['id'];
 
+
 try {
-    // Load the course data
+   
     $course = new TextContent($db, $course_id);
     $course->loadTags();
+
 } catch (Exception $e) {
     die($e->getMessage());
 }
 
-// Load categories and tags
+
 $category = new Category($db);
 $categories = $category->getAllCategories();
 
 $tag = new Tag($db);
 $tags = $tag->getAllTags();
 
-// Load content from file with error handling
+
 $contentPath = $course->getContent();
 $editorContent = '';
 
 debug_log("Content Path", $contentPath);
 
 if (!empty($contentPath)) {
-    // Create content directory if it doesn't exist
+    
     $content_dir = dirname($contentPath);
     if (!file_exists($content_dir)) {
         if (!mkdir($content_dir, 0777, true)) {
@@ -67,12 +71,12 @@ if (!empty($contentPath)) {
 
 debug_log("Editor Content Length", strlen($editorContent));
 
-// Handle form submission
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {
         $db->beginTransaction();
 
-        // Collect form data
+        
         $courseName = trim($_POST['course-name']);
         $courseDescription = trim($_POST['course-description']);
         $category_id = $_POST['category'];
@@ -86,12 +90,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $content = preg_replace('/<figure[^>]*class="media"[^>]*><oembed[^>]*url="https:\/\/www\.youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})"[^>]*><\/oembed><\/figure>/i', '<iframe width="560" height="315" src="https://www.youtube.com/embed/$1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>', $content);
 
 
-        // Validate required fields
+       
         if (empty($courseName) || empty($courseDescription)) {
             throw new Exception('Course name and description are required.');
         }
 
-        // Handle banner image upload
+        
         if (isset($_FILES['banner']) && $_FILES['banner']['error'] == 0) {
             $allowed = ['jpg', 'jpeg', 'png', 'gif'];
             $file_ext = strtolower(pathinfo($_FILES['banner']['name'], PATHINFO_EXTENSION));
@@ -118,7 +122,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $banner_path = $new_banner_path;
         }
 
-        // Ensure content directory exists
+        
         $content_dir = dirname($contentPath);
         if (!file_exists($content_dir)) {
             if (!mkdir($content_dir, 0777, true)) {
@@ -140,16 +144,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             throw new Exception("Failed to save course content.");
         }
 
-        // Update course properties
+   
         $course->setTitle($courseName);
         $course->setDescription($courseDescription);
         $course->setCategory($category_id);
         $course->setBannerImage($banner_path);
 
-        // Associate tags
+        
         $course->saveTags($selectedTags);
 
-        // Save changes to the database
+        
         $course->saveCourse();
 
         $db->commit();
@@ -331,14 +335,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 removePlugins: ['RestrictedEditingMode', 'StandardEditingMode']
             })
             .then(editor => {
-                // Attach the toolbar to the designated element
+                
                 const toolbarContainer = document.querySelector('.document-editor__toolbar');
                 toolbarContainer.appendChild(editor.ui.view.toolbar.element);
 
-                // Log the initial content
+                
                 console.log('Initial content:', editor.getData());
 
-                // Handle form submission
+                
                 document.querySelector('form').addEventListener('submit', function(e) {
                     const editorData = editor.getData();
                     console.log('Submitting content:', editorData);
@@ -349,7 +353,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     this.appendChild(hiddenInput);
                 });
 
-                // Log success message
+                
                 console.log('Editor initialized successfully');
             })
             .catch(error => {
