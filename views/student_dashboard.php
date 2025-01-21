@@ -9,9 +9,18 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'student') {
     exit();
 }
 
+if(isset($_GET['unenrolled'])) {
+    echo "
+    <script>alert('You have successfully unrolled from the course.')</script>
+    ";
+    
+}
+
 $student = new Student($db);
 $student->setUserId($_SESSION['user_id']);
 $student->fetchProfile();
+
+$Enrolledcourses = $student->viewMyCourses();
 
 $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
 
@@ -49,16 +58,118 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $isAjax) {
             </form>
             <?php
             break;
+
         case 'enrolled-courses':
+            $enrolledCourses = $student->viewMyCourses();
             ?>
-            <h2>Enrolled Courses</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <?php if(!$enrolledCourses){ ?>
+                    <p class="col-span-full text-center text-gray-600 dark:text-gray-400 text-xl">No courses found.</p>
+                    <?php } ?>
+                <?php foreach ($enrolledCourses as $course): ?>
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <!-- Course Banner -->
+                        <div class="h-48 overflow-hidden">
+                            <img src="<?php echo htmlspecialchars($course['banner_image'] ?? '/assets/default-course-banner.jpg'); ?>" 
+                                 alt="<?php echo htmlspecialchars($course['title']); ?>" 
+                                 class="w-full h-full object-cover">
+                        </div>
+                        
+                        <!-- Course Content -->
+                        <div class="p-4">
+                            <h3 class="text-xl font-semibold mb-2"><?php echo htmlspecialchars($course['title']); ?></h3>
+                            
+                            <!-- Teacher Info -->
+                            <div class="flex items-center mb-3">
+                                <img src="<?php echo htmlspecialchars($course['teacher_profile_image'] ?? '/assets/default-profile.jpg'); ?>" 
+                                     alt="<?php echo htmlspecialchars($course['teacher_first_name'] . ' ' . $course['teacher_last_name']); ?>" 
+                                     class="w-8 h-8 rounded-full mr-2">
+                                <span class="text-gray-600">
+                                    <?php echo htmlspecialchars($course['teacher_first_name'] . ' ' . $course['teacher_last_name']); ?>
+                                </span>
+                            </div>
+                            
+                            <!-- Course Details -->
+                            <p class="text-gray-600 mb-3 line-clamp-2">
+                                <?php echo htmlspecialchars($course['description']); ?>
+                            </p>
+                            
+                            <!-- Progress Section -->
+                            <div class="mb-3">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span>Progress</span>
+                                    <span><?php echo htmlspecialchars($course['completion_status']); ?>%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-blue-600 h-2 rounded-full" 
+                                         style="width: <?php echo htmlspecialchars($course['completion_status']); ?>%">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Course Meta -->
+                            <div class="flex justify-between text-sm text-gray-500">
+                                <span>Category: <?php echo htmlspecialchars($course['category']); ?></span>
+                                <span>Enrolled: <?php echo date('M d, Y', strtotime($course['enrollment_date'])); ?></span>
+                            </div>
+                            
+                            <!-- Review Section (if exists) -->
+                            <?php if (isset($course['review_id'])): ?>
+                            <div class="mt-3 pt-3 border-t">
+                                <div class="flex items-center mb-2">
+                                    <div class="flex text-yellow-400">
+                                        <?php for ($i = 1; $i <= 5; $i++): ?>
+                                            <?php if ($i <= $course['rating']): ?>
+                                                <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                                                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                                                </svg>
+                                            <?php else: ?>
+                                                <svg class="w-4 h-4 fill-current text-gray-300" viewBox="0 0 20 20">
+                                                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                                                </svg>
+                                            <?php endif; ?>
+                                        <?php endfor; ?>
+                                    </div>
+                                    <span class="text-sm text-gray-500 ml-2">
+                                        <?php echo date('M d, Y', strtotime($course['reviewed_at'])); ?>
+                                    </span>
+                                </div>
+                                <?php if (!empty($course['comment'])): ?>
+                                <p class="text-sm text-gray-600 italic">
+                                    "<?php echo htmlspecialchars($course['comment']); ?>"
+                                </p>
+                                <?php endif; ?>
+                            </div>
+                            <?php endif; ?>
+                            
+                            <!-- Action Button -->
+                            <a href="view_course_action.php?id=<?php echo htmlspecialchars($course['course_id']); ?>&type=<?php echo htmlspecialchars($course['content_type']); ?>&action=view">
+                            <button onclick="continueCourse(<?php echo $course['course_id']; ?>)" 
+                                    class="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
+                                Continue Learning
+                            </button>
+                                </a>
+                            <a href="view_course_action.php?id=<?php echo htmlspecialchars($course['course_id']); ?>&action=leave">
+                            <button onclick="continueCourse(<?php echo $course['course_id']; ?>)" 
+                                    class="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
+                                Leave Course
+                            </button>
+                            </a>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+
+
             <?php
             break;
-        case 'view-courses':
+
+        
             ?>
             <h2>Available Courses</h2>
             <?php
             break;
+            
         default:
             break;
     }
@@ -72,6 +183,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $isAjax) {
     <title>Student Dashboard</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
 </head>
 <body class="bg-gray-100 font-sans" style="visibility: hidden;">
 
@@ -85,12 +204,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $isAjax) {
     <aside id="sidebar" class="w-full sm:w-1/5 bg-gray-200 p-4 flex-shrink-0">
         <a href="#" class="nav-link block mb-4 text-blue-600 hover:text-blue-800" data-section="profile">Profile</a>
         <a href="#" class="nav-link block mb-4 text-blue-600 hover:text-blue-800" data-section="enrolled-courses">Enrolled Courses</a>
-        <a href="#" class="nav-link block mb-4 text-blue-600 hover:text-blue-800" data-section="view-courses">View Courses</a>
     </aside>
 
     <div id="main-content" class="w-full sm:w-4/5 p-4 flex-1">
-        <div id="profile-image-container" style="display: none;" class="mb-6">
-            <img id="profile-image-preview" src="<?php echo htmlspecialchars($student->getProfileImage()); ?>" alt="Profile Image" class="w-32 h-32 rounded-full object-cover">
+    <div id="profile-image-container" style="display: none;" class="mb-6 relative h-48">
+            <!-- Banner Image -->
+            <img id="banner-image-preview" 
+                 src="<?php echo htmlspecialchars($student->getBannerImage()); ?>" 
+                 alt="Banner Image" 
+                 class="w-full h-32 object-cover rounded-t">
+                 
+            <!-- Profile Image -->
+            <div class="absolute top-24 left-0 w-full flex justify-center">
+                <img id="profile-image-preview" 
+                     src="<?php echo htmlspecialchars($student->getProfileImage()); ?>" 
+                     alt="Profile Image" 
+                     class="w-32 h-32 rounded-full object-cover border-4 border-white">
+            </div>
         </div>
 
         <div id="content">
@@ -130,7 +260,8 @@ $(document).ready(function() {
         });
     });
 
-    $('#profile-form').on('submit', function(e) {
+    $(document).on('submit', '#profile-form', function(e) {
+        e.preventDefault();
         var valid = true;
         var firstName = $('input[name=first_name]').val().trim();
         var lastName = $('input[name=last_name]').val().trim();
@@ -161,8 +292,27 @@ $(document).ready(function() {
             valid = false;
         }
 
-        if (!valid) {
-            e.preventDefault();
+        if (valid) {
+            // Handle form submission via AJAX
+            var formData = new FormData(this);
+            $.ajax({
+                url: 'update_profile.php',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        alert('Profile updated successfully!');
+                        location.reload();
+                    } else {
+                        alert('Error updating profile: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('An error occurred while updating the profile.');
+                }
+            });
         }
     });
 });
