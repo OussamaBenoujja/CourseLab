@@ -1,9 +1,9 @@
 <?php
 session_start();
-require_once __DIR__ . '/../../control/User.php';
-require_once __DIR__ . '/../../control/Student.php';
-require_once __DIR__ . '/../../control/Teacher.php';
-require_once __DIR__ . '/../../data/db_config.php';
+require_once '../../control/User.php';
+require_once '../../control/Student.php';
+require_once '../../control/Teacher.php';
+require_once '../../data/db_config.php';
 
 $first_name = isset($_POST['first_name']) ? $_POST['first_name'] : '';
 $last_name = isset($_POST['last_name']) ? $_POST['last_name'] : '';
