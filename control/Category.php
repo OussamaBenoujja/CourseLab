@@ -5,6 +5,7 @@
 require_once '../data/db_config.php';
 
 class Category {
+    
     protected $db;
     protected $category_id;
     protected $category_name;
@@ -17,7 +18,7 @@ class Category {
             $this->category_id = $category_id;
             $this->category_name = $category_name;
             $this->created_at = $created_at;
-            // Optionally load category data from the database
+            
         }
     }
 
