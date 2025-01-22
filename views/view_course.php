@@ -1,12 +1,5 @@
 <?php
-
-
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit();
-}
-
-if (isset($_GET['id'])) {
+session_start();
 
     require_once '../control/Course.php';
     require_once '../control/textcontent.php';
@@ -14,6 +7,13 @@ if (isset($_GET['id'])) {
     require_once '../control/Teacher.php';
     require_once '../data/db_config.php';
 
+
+if (!isset( $_SESSION['user_id'])) {
+    header('Location: auth/login.php');
+    exit();
+}
+
+if (isset($_GET['id'])) {
 
     $course = new TextContent($db, $_GET['id']);
 
@@ -62,6 +62,7 @@ if (isset($_GET['id'])) {
     </style>
 </head>
 <body class="bg-gray-50">
+<?php include '../includes/navbar.php'; ?>  
     <div class="min-h-screen">
         <!-- Course Header -->
         <div class="relative h-[400px] bg-gradient-to-r from-blue-600 to-purple-600">
@@ -72,26 +73,7 @@ if (isset($_GET['id'])) {
             <div class="relative container mx-auto px-4 pt-20 animated-header">
                 <h1 class="text-4xl md:text-5xl font-bold text-white mb-4"> <?php echo htmlspecialchars($title); ?> </h1>
 
-                <!-- Rating Display -->
-                <div class="flex items-center space-x-2 text-yellow-400 mb-6">
-                    <?php
-                    if ($rating) {
-                        $full_stars = floor($rating);
-                        $half_star = $rating - $full_stars >= 0.5;
 
-                        for ($i = 1; $i <= 5; $i++) {
-                            if ($i <= $full_stars) {
-                                echo '<i class="fas fa-star"></i>';
-                            } elseif ($half_star && $i == $full_stars + 1) {
-                                echo '<i class="fas fa-star-half-alt"></i>';
-                            } else {
-                                echo '<i class="far fa-star"></i>';
-                            }
-                        }
-                    ?>
-                    <span class="text-white ml-2">(<?php echo number_format($rating, 1); ?>)</span>
-                    <?php } ?>
-                </div>
 
                 <div class="flex items-center space-x-4">
                     <?php if ($teacher_profile_image): ?>
@@ -118,7 +100,7 @@ if (isset($_GET['id'])) {
                         <?php endif; ?>
                     </div>
 
-                    <!-- Reviews Section -->
+                    <!-- Reviews Section
                     <div class="mt-8 bg-white rounded-xl shadow-lg p-6 hover-glow">
                         <h2 class="text-2xl font-bold mb-6">Reviews</h2>
 
@@ -163,7 +145,7 @@ if (isset($_GET['id'])) {
                                 <p class="text-sm text-gray-500">Reviewed on <?php echo date('F j, Y', strtotime($reviewed_at)); ?></p>
                             </div>
                         <?php endif; ?>
-                    </div>
+                    </div> -->
                 </div>
 
                 <!-- Sidebar -->
@@ -180,6 +162,20 @@ if (isset($_GET['id'])) {
                                     <div>
                                         <p class="text-sm text-gray-500">Created</p>
                                         <p class="font-medium"> <?php echo date('F j, Y', strtotime($course_created_at)); ?> </p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-500">Tags</p>
+                                        <div class="flex flex-wrap gap-2 mt-1">
+                                            <?php if(!empty($tags)): ?>
+                                                <?php foreach($tags as $tag): ?>
+                                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                                                        <?php echo htmlspecialchars($tag->name); ?>
+                                                    </span>
+                                                <?php endforeach; ?>
+                                            <?php else: ?>
+                                                <p class="text-gray-500 text-sm">No tags available</p>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
