@@ -253,6 +253,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </style>
 </head>
 <body>
+<?php include '../includes/navbar.php'; ?>  
     <h1>Update Course</h1>
 
     <?php if (isset($error_message)): ?>
