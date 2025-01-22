@@ -8,6 +8,7 @@ require_once '../control/Course.php';
 
 
 
+
 if(isset($_GET['enrolled'])) {
     echo "
     <script>alert('You have successfully enrolled in the course.')</script>
@@ -39,7 +40,8 @@ $total_pages = ceil($total_courses / $items_per_page);
 </head>
 <body class="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
 
-    
+   <?php include '../includes/navbar.php'; ?>    
+
     <header class="bg-blue-600 text-white py-4 shadow-md">
         <div class="container mx-auto px-4">
             <h1 class="text-3xl font-bold">Welcome to CourseLab</h1>
