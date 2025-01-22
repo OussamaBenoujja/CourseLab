@@ -98,7 +98,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             throw new Exception("Failed to save course content file.");
         }
 
-        // Create TextContent instance
+        
         $textCourse = new TextContent($db);
         $textCourse->setTitle($courseName);
         $textCourse->setDescription($courseDescription);
@@ -123,8 +123,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         header("Location: teacher_dashboard.php");
         exit();
     } catch (Exception $e) {
+
         $db->rollBack();
-        // Cleanup: Remove created files if there's an error
         if (isset($filepath) && file_exists($filepath)) {
             unlink($filepath);
         }
@@ -147,6 +147,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <script src="https://cdn.ckeditor.com/ckeditor5/38.1.1/decoupled-document/ckeditor.js"></script>
 </head>
 <body class="bg-gray-50 min-h-screen">
+<?php include '../includes/navbar.php'; ?>  
     <div class="container mx-auto px-4 py-8 max-w-4xl">
         <h1 class="text-3xl font-bold text-gray-800 mb-8">Write New Chapter</h1>
 
