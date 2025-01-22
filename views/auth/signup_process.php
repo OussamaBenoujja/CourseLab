@@ -32,10 +32,9 @@ $user->setLastName($last_name);
 $user_id = $user->signup();
 
 if ($user_id) {
-    // session storage and redirection
     $_SESSION['user_id'] = $user_id;
     $_SESSION['role'] = $role;
-    header('Location: dashboard.php');
+    header('Location: ../home.php');
     exit();
 } else {
     die("Signup failed. Please try again.");
