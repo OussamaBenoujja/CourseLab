@@ -19,18 +19,22 @@ echo "User object created. User ID: " . $user->getUserId() . "\n";
 
 if (isset($_POST['first_name'])) {
     $user->setFirstName($_POST['first_name']);
+    $_SESSION['first_name'] = $user->getFirstName();
     echo "First name set: " . $user->getFirstName() . "\n";
 }
 if (isset($_POST['last_name'])) {
     $user->setLastName($_POST['last_name']);
+    $_SESSION['last_name'] = $user->getLastName();
     echo "Last name set: " . $user->getLastName() . "\n";
 }
 if (isset($_POST['email'])) {
     $user->setEmail($_POST['email']);
+    $_SESSION['email'] = $user->getEmail();
     echo "Email set: " . $user->getEmail() . "\n";
 }
 if (isset($_POST['bio'])) {
     $user->setBio($_POST['bio']);
+    $_SESSION['bio'] = $user->getBio();
     echo "Bio set: " . $user->getBio() . "\n";
 }
 
@@ -47,6 +51,7 @@ if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] == UPLO
     echo "Profile image uploaded. Moving to: $filePath\n";
     if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $filePath)) {
         $user->setProfileImage($filePath);
+        $_SESSION['profile_image'] = $user->getProfileImage();
         echo "Profile image set: " . $user->getProfileImage() . "\n";
     } else {
         echo 'Error moving profile image.\n';
@@ -62,6 +67,7 @@ if (isset($_FILES['banner_image']) && $_FILES['banner_image']['error'] == UPLOAD
     echo "Banner image uploaded. Moving to: $filePath\n";
     if (move_uploaded_file($_FILES['banner_image']['tmp_name'], $filePath)) {
         $user->setBannerImage($filePath);
+        $_SESSION['banner_image'] = $user->getBannerImage();
         echo "Banner image set: " . $user->getBannerImage() . "\n";
     } else {
         echo 'Error moving banner image.\n';
