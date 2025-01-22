@@ -109,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $isAjax) {
                             
                             <!-- Course Meta -->
                             <div class="flex justify-between text-sm text-gray-500">
-                                <span>Category: <?php echo htmlspecialchars($course['category']); ?></span>
+                                <span>Category: <?php echo htmlspecialchars($course['category_name']); ?></span>
                                 <span>Enrolled: <?php echo date('M d, Y', strtotime($course['enrollment_date'])); ?></span>
                             </div>
                             
@@ -144,13 +144,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $isAjax) {
                             
                             <!-- Action Button -->
                             <a href="view_course_action.php?id=<?php echo htmlspecialchars($course['course_id']); ?>&type=<?php echo htmlspecialchars($course['content_type']); ?>&action=view">
-                            <button onclick="continueCourse(<?php echo $course['course_id']; ?>)" 
+                            <button 
                                     class="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
                                 Continue Learning
                             </button>
                                 </a>
                             <a href="view_course_action.php?id=<?php echo htmlspecialchars($course['course_id']); ?>&action=leave">
-                            <button onclick="continueCourse(<?php echo $course['course_id']; ?>)" 
+                            <button  
                                     class="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
                                 Leave Course
                             </button>
@@ -193,7 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $isAjax) {
     </style>
 </head>
 <body class="bg-gray-100 font-sans" style="visibility: hidden;">
-
+<?php include '../includes/navbar.php'; ?>  
 <div class="flex flex-col sm:flex-row">
     <button id="sidebar-toggle" class="sm:hidden px-4 py-2 text-gray-600 hover:text-gray-800 focus:outline-none">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
