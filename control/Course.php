@@ -199,25 +199,33 @@ abstract class Course
         if (!$this->course_id) {
             $this->course_id = $this->db->lastInsertId();
         }
-        // Save tags association
+        
         $this->saveTags();
     }
 
     public function deleteCourse() {
-
-        $stmt = $this->db->prepare("DELETE FROM coursetags WHERE course_id = :course_id");
-        $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $stmt = $this->db->prepare("DELETE FROM reviews WHERE course_id = :course_id");
-        $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $stmt = $this->db->prepare("DELETE FROM enrollments WHERE course_id = :course_id");
-        $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $stmt = $this->db->prepare("DELETE FROM courses WHERE course_id = :course_id");
-        $stmt->bindParam(':course_id', $this->course_id, PDO::PARAM_INT);
-        $stmt->execute();
-
+        
+        if ($this->content_type === 'text' && file_exists($this->content)) {
+            unlink($this->content);
+        }
+        if ($this->banner_image && file_exists($this->banner_image)) {
+            unlink($this->banner_image);
+        }
+    
+        $this->db->beginTransaction();
+        
+        try {
+            $tables = ['coursetags', 'reviews', 'enrollments', 'courses'];
+            foreach ($tables as $table) {
+                $stmt = $this->db->prepare("DELETE FROM $table WHERE course_id = ?");
+                $stmt->execute([$this->course_id]);
+            }
+            
+            $this->db->commit();
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
     }
 
     public function addTag(Tag $tag) {
