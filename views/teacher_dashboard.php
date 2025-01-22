@@ -6,7 +6,7 @@ require_once '../control/Teacher.php';
 require_once '../control/TextContent.php';
 require_once '../control/VideoContent.php';
 
-// Authentication check
+
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
     header("Location: ../error.php");
     exit();
@@ -45,7 +45,7 @@ $engagement_json = json_encode($stats['engagement']);
     </style>
 </head>
 <body class="bg-gray-50">
-    <!-- Navigation -->
+<?php include '../includes/navbar.php'; ?>  
 
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 py-8">
@@ -175,7 +175,10 @@ $engagement_json = json_encode($stats['engagement']);
                                     <a href="edit_video.php?id=<?= $course['course_id'] ?>" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</a>
                                     <a href="view_video.php?id=<?= $course['course_id'] ?>" class="text-green-600 hover:text-green-900 mr-3">View</a>
                                 <?php endif; ?>
-                                <button onclick="deleteCourse(<?= $course['course_id'] ?>)" class="text-red-600 hover:text-red-900">Delete</button>
+                                <button onclick="deleteCourse(<?= $course['course_id'] ?>, '<?= $course['content_type'] ?>')" 
+                                        class="text-red-600 hover:text-red-900">
+                                    Delete
+                                </button>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -289,25 +292,39 @@ $engagement_json = json_encode($stats['engagement']);
             courseIdToDelete = null;
         }
 
+        
+        let contentTypeToDelete = null;
+
+        function deleteCourse(courseId, contentType) {
+            courseIdToDelete = courseId;
+            contentTypeToDelete = contentType;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
         document.getElementById('deleteConfirm').addEventListener('click', function() {
-            if (courseIdToDelete) {
-                fetch(`delete_course.php?id=${courseIdToDelete}`, {
+            if (courseIdToDelete && contentTypeToDelete) {
+                fetch(`delete_course.php?id=${courseIdToDelete}&type=${contentTypeToDelete}`, {
                     method: 'DELETE'
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { 
+                            throw new Error(err.message || 'Server error'); 
+                        });
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.success) {
                         window.location.reload();
-                    } else {
-                        alert('Error deleting course');
                     }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error deleting course');
+                    console.error('Delete Error:', error);
+                    alert('Delete failed: ' + error.message);
+                    closeDeleteModal();
                 });
             }
-            closeDeleteModal();
         });
     </script>
 </body>
