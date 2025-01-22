@@ -1,5 +1,9 @@
 <?php
 session_start();
+
+include '../includes/auth_check.php';
+
+
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
     header("Location: err_pages/404.php");
     exit();

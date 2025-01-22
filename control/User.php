@@ -15,6 +15,7 @@ class User
     protected $created_at;
     protected $banner_image;
     protected $bio;
+    protected $status;
 
     function __construct(PDO $db, $user_id = null, $email = null, $password = null, $first_name = null, $last_name = null, $role = null, $profile_image = null, $created_at = null, $banner_image = null, $bio = null)
     {
@@ -83,6 +84,11 @@ class User
         return $this->bio;
     }
 
+    public function getStatus()
+    {
+        return $this->status;
+    }
+
     //setters
 
     public function setUserId($user_id)
@@ -133,17 +139,25 @@ class User
     {
         $this->bio = $bio;
     }
+
+    public function setStatus($status)
+    {
+        $this->status = $status;
+    }
     
     public function signup()
     {
         if ($this->role == 'student' || $this->role == 'teacher') {
-            $query = "INSERT INTO users (email, password, first_name, last_name, role) VALUES (:email, :password, :first_name, :last_name, :role)";
+            $status = ($this->role == 'teacher') ? 'suspended' : 'active';
+            
+            $query = "INSERT INTO users (email, password, first_name, last_name, role, status) VALUES (:email, :password, :first_name, :last_name, :role, :status)";
             $stmt = $this->db->prepare($query);
             $stmt->bindParam(':email', $this->email);
             $stmt->bindParam(':password', $this->password);
             $stmt->bindParam(':first_name', $this->first_name);
             $stmt->bindParam(':last_name', $this->last_name);
             $stmt->bindParam(':role', $this->role);
+            $stmt->bindParam(':status', $status);
             $stmt->execute();
             return $this->db->lastInsertId();
         } elseif ($this->role == 'admin') {
@@ -241,6 +255,7 @@ class User
             $this->bio = $result['bio'];
             $this->profile_image = $result['profile_image'];
             $this->banner_image = $result['banner_image'];
+            $this->status = $result['status'];
             return true;
         } else {
             return false;

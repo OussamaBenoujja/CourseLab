@@ -4,6 +4,8 @@
 
 session_start();
 
+include '../includes/auth_check.php';
+
 require_once '../control/User.php';
 require_once '../control/Student.php';
 

@@ -1,5 +1,8 @@
 <?php
 session_start();
+
+include '../includes/auth_check.php';
+
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
     http_response_code(403);
     echo "Access forbidden.";

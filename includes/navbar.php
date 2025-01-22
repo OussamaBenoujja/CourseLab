@@ -1,4 +1,5 @@
 <?php
+
 $isLoggedIn = isset($_SESSION['user_id']);
 $currentRole = $isLoggedIn ? $_SESSION['role'] : null;
 ?>

@@ -30,10 +30,12 @@ $user->setLastName($last_name);
 
 
 $user_id = $user->signup();
+$user->loadprofile();
 
 if ($user_id) {
     $_SESSION['user_id'] = $user_id;
     $_SESSION['role'] = $role;
+    $_SESSION['status'] = $user->getStatus();
     header('Location: ../home.php');
     exit();
 } else {

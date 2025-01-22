@@ -9,12 +9,7 @@ require_once __DIR__ . '/../../data/db_config.php';
 $email = isset($_POST['email']) ? $_POST['email'] : '';
 $password = isset($_POST['password']) ? $_POST['password'] : '';
 
-
-
 $user = new User($db);
-
-
-
 $result = $user->login($email, $password);
 
 
@@ -30,6 +25,7 @@ if ($result) {
     $_SESSION['profile_image']  = $user->getProfileImage();
     $_SESSION['banner_image']   = $user->getBannerImage();
     $_SESSION['bio']            = $user->getBio();
+    $_SESSION['status']         = $user->getStatus(); 
     
     header('Location: ../home.php');
     exit();

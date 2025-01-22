@@ -1,6 +1,9 @@
 <?php
 session_start();
 
+include '../includes/auth_check.php';
+
+
     require_once '../control/Course.php';
     require_once '../control/textcontent.php';
     require_once '../control/User.php';
