@@ -235,6 +235,7 @@ class User
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($result) {
             $this->email = $result['email'];
+            $this->role = $result['role'];
             $this->first_name = $result['first_name'];
             $this->last_name = $result['last_name'];
             $this->bio = $result['bio'];
